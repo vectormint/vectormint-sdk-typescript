@@ -1,0 +1,43 @@
+{
+  "name": "@vectormint/sdk",
+  "version": "1.8.0",
+  "description": "Official TypeScript client for the VectorMint credit-card intelligence API",
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "generate": "node scripts/generate.mjs",
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "npm run build",
+    "pack:check": "npm pack --dry-run",
+    "prepare": "npm run build"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vectormint/vectormint-sdk-typescript.git"
+  },
+  "homepage": "https://www.vectormint.app/docs/sdks",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}
