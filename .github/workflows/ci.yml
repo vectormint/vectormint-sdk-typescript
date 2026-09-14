@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  regenerate-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-package-lock
+      - name: Regenerate from production OpenAPI
+        run: npm run generate
+      - name: Fail on generated-code drift
+        run: git diff --exit-code -- src/index.ts
+      - run: npm run check
+      - run: npm run build
+
+  git-install-smoke:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: regenerate-and-build
+    runs-on: ubuntu-latest
+    env:
+      VECTORMINT_API_KEY: ${{ secrets.VECTORMINT_SDK_SMOKE_API_KEY }}
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install from the documented GitHub URL
+        run: |
+          mkdir -p /tmp/vectormint-ts-smoke
+          cd /tmp/vectormint-ts-smoke
+          npm init -y >/dev/null
+          npm install github:vectormint/vectormint-sdk-typescript
+      - name: Authenticated search_cards smoke when throwaway key is configured
+        run: |
+          cd /tmp/vectormint-ts-smoke
+          node --input-type=module <<'NODE'
+          const { VectorMint } = await import('@vectormint/sdk');
+          const key = process.env.VECTORMINT_API_KEY;
+          if (!key) {
+            console.log('Authenticated live smoke skipped: VECTORMINT_SDK_SMOKE_API_KEY is not configured.');
+            process.exit(0);
+          }
+          const vm = new VectorMint({ apiKey: key });
+          const result = await vm.searchCards({ q: 'chase', limit: 1 });
+          if (!result || !Array.isArray(result.data)) throw new Error('searchCards returned an unexpected payload');
+          console.log(`Authenticated searchCards smoke passed with ${result.data.length} result(s).`);
+          NODE
