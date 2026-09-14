@@ -76,7 +76,7 @@ export class VectorMint {
       for (const item of values) url.searchParams.append(name, String(item));
     }
 
-    const headers = new Headers({ Accept: 'application/json' });
+    const headers = new Headers({ Accept: 'application/json', 'User-Agent': 'vectormint-typescript/1.8.0' });
     if (this.authMode === 'x-api-key') headers.set('x-api-key', this.apiKey);
     else headers.set('Authorization', 'Bearer ' + this.apiKey);
 
